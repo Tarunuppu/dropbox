@@ -10,3 +10,4 @@ flask-migrate
 flask-bcrypt
 flask-jwt-extended
 boto3
+flask-cors

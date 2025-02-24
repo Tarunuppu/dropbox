@@ -24,24 +24,31 @@ def user_verification(fn):
 @dashboard_api.route('/list', methods=['GET'])
 @user_verification
 def list(user_id):
-    return DashboardService.list(user_id)
+    data = request.args
+    sort_by = data.get('sort_by') if data.get('sort_by') else 'created_at'
+    sort_order = data.get('sort_order') if data.get('sort_order') else 'asc'
+    page_number = int(data.get('page_number')) if data.get('page_number') else 1
+    page_limit = int(data.get('page_limit')) if data.get('page_limit') else 10
+    return DashboardService.list(user_id, sort_by, sort_order, page_number, page_limit)
 
 
 
 @dashboard_api.route('/upload', methods=['POST'])
 @user_verification
 def upload(user_id):
-    file = request.files.get("file")
-    if not file:
+    files = request.files.getlist("file")
+    if not files:
         return jsonify({'message': 'invalid payload'}), 400
     
-    filename = file.filename
-    extension = filename.split('.')[-1]
+    for file in files:
+        filename = file.filename
+        extension = filename.split('.')[-1]
 
-    if extension not in ['jpg', 'jpeg', 'png', 'pdf', 'docx']:
-        return jsonify({'message': 'invalid file type'}), 400
-    
-    return DashboardService.upload(user_id, file)
+        if extension not in ['jpg', 'jpeg', 'png', 'pdf', 'docx', 'json', 'txt']:
+            return jsonify({'message': 'invalid file type'}), 400
+        
+    return DashboardService.upload(user_id, files)
+
 
 
 
@@ -56,8 +63,14 @@ def delete(user_id):
 
 
 @dashboard_api.route('/download', methods=['GET'])
-def download():
-    return jsonify({'message': 'download'}), 200
+@user_verification
+def download(user_id):
+    data = request.args
+    file_name = data.get('file_name')
+    if not file_name:
+        return jsonify({'message': 'invalid payload'}), 400
+    return DashboardService.download(user_id, file_name)
+    
 
 
 

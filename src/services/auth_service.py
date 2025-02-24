@@ -9,7 +9,7 @@ class AuthService:
     @staticmethod
     def register(name, email, password):
         if not AuthService.validate_email(email):
-            return jsonify({'message': 'invalid email'}), 400
+            return jsonify({'message': 'invalid email / user already exists'}), 400
         new_user = User(name, email, password)
         try:
             db.session.add(new_user)
@@ -27,7 +27,7 @@ class AuthService:
         if not user.check_password(password):
             return jsonify({'message': 'invalid password'}), 400
         jwt = create_access_token(identity=user.id)
-        return jsonify({'access_token': jwt}), 200
+        return jsonify({'access_token': jwt, 'user_name' : user.name}), 200
 
     @staticmethod
     def logout():
@@ -41,3 +41,10 @@ class AuthService:
         if User.query.filter_by(email=email).first():
             return False
         return True
+
+    @staticmethod
+    def verify_token(user_id):
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'isAuthenticated': False}), 200
+        return jsonify({'isAuthenticated': True}), 200
